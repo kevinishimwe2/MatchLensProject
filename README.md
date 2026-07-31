@@ -268,7 +268,74 @@ Confirm that every team in the `/api/football` response contains a `crest` URL, 
 - Save favourite teams locally
 - Add league statistics and charts
 - Improve keyboard navigation and screen-reader announcements
+## Docker and Nginx Deployment
 
+MatchLens uses Docker Compose to simulate a three-server deployment:
+
+```text
+                         ┌─────────────┐
+User ── localhost:8081 ─▶│ lb01: Nginx │
+                         └──────┬──────┘
+                          ┌─────┴─────┐
+                          ▼           ▼
+                  ┌─────────────┐ ┌─────────────┐
+                  │ web01       │ │ web02       │
+                  │ Nginx + Node│ │ Nginx + Node│
+                  └─────────────┘ └─────────────┘
+```
+
+- `lb01` distributes requests using Nginx `least_conn`.
+- `web01` and `web02` serve the frontend and proxy `/api/` requests to Node.
+- The API key is loaded from `/etc/matchlens.env` and is never included in the Docker image or Git repository.
+- Container health checks ensure the load balancer starts only after both web servers are available.
+
+### Start the deployment
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+Open MatchLens at:
+
+```text
+http://localhost:8081
+```
+
+### Check container health
+
+```bash
+docker compose ps
+curl http://localhost:8081/health
+```
+
+### View logs
+
+```bash
+docker compose logs --tail=50
+```
+
+Follow live logs:
+
+```bash
+docker compose logs -f
+```
+
+Press `Ctrl+C` to stop following the logs.
+
+### Stop the deployment
+
+```bash
+docker compose down
+```
+
+### Start it again
+
+```bash
+docker compose up -d
+```
+
+The containers use `restart: unless-stopped`, allowing them to recover automatically after Docker restarts.
 ## Data source
 
 Football data and club crests are provided by [football-data.org](https://www.football-data.org/).
