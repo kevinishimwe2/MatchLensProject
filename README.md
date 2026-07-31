@@ -275,77 +275,43 @@ Confirm that every team in the `/api/football` response contains a `crest` URL, 
 - Save favourite teams locally
 - Add league statistics and charts
 - Improve keyboard navigation and screen-reader announcements
-## Docker and Nginx Deployment
 
-MatchLens uses Docker Compose to simulate a three-server deployment:
+### Deployment model
 
-```text
-                         ┌─────────────┐
-User ── localhost:8081 ─▶│ lb01: Nginx │
-                         └──────┬──────┘
-                          ┌─────┴─────┐
-                          ▼           ▼
-                  ┌─────────────┐ ┌─────────────┐
-                  │ web01       │ │ web02       │
-                  │ Nginx + Node│ │ Nginx + Node│
-                  └─────────────┘ └─────────────┘
-```
+The assignment deployment is implemented on the available WSL host using three isolated Docker containers. Each container represents one of the required server roles:
 
-- `lb01` distributes requests using Nginx `least_conn`.
-- `web01` and `web02` serve the frontend and proxy `/api/` requests to Node.
-- The API key is loaded from `/etc/matchlens.env` and is never included in the Docker image or Git repository.
-- Container health checks ensure the load balancer starts only after both web servers are available.
+- `web01`: first Nginx web server and Node API
+- `web02`: second Nginx web server and Node API
+- `lb01`: Nginx load balancer
 
-### Start the deployment
+All containers communicate through the private `matchlens-network` Docker bridge network. Only the load balancer is exposed to the host.
 
-```bash
-docker compose build
-docker compose up -d
-```
+The load balancer uses host port `8081` because port `80` is already used by the host Nginx deployment and port `8080` was occupied by another local service.
 
-Open MatchLens at:
+The containerized deployment is accessed through:
 
 ```text
 http://localhost:8081
-```
 
-### Check container health
+## External API and attribution
 
-```bash
-docker compose ps
-curl http://localhost:8081/health
-```
+MatchLens uses the [football-data.org API](https://www.football-data.org/) as its external data source.
 
-### View logs
+The API provides:
 
-```bash
-docker compose logs --tail=50
-```
+- League standings
+- Team names and identifiers
+- Club crest URLs
+- Points and match statistics
+- Scheduled fixture information
 
-Follow live logs:
+MatchLens uses version 4 of the API. The official endpoints, filters, authentication requirements, response formats, rate limits, and error codes are described in the [football-data.org API v4 documentation](https://www.football-data.org/documentation/quickstart).
 
-```bash
-docker compose logs -f
-```
+All football data and club crests displayed by MatchLens are credited to football-data.org and its data providers. MatchLens transforms the API response only to present it more clearly; it does not claim ownership of the underlying football data.
 
-Press `Ctrl+C` to stop following the logs.
+Some information, including recent form and certain fixtures, may be unavailable depending on the API subscription plan and current competition data.
 
-### Stop the deployment
-
-```bash
-docker compose down
-```
-
-### Start it again
-
-```bash
-docker compose up -d
-```
-
-The containers use `restart: unless-stopped`, allowing them to recover automatically after Docker restarts.
-## Data source
-
-Football data and club crests are provided by [football-data.org](https://www.football-data.org/).
+The API key is sent only by `api-server.js` through the required authentication header. It is never included in frontend JavaScript, Docker images, or the public Git repository.
 
 Demo Video Link:
 Website Link:
