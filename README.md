@@ -30,25 +30,32 @@ MatchLens is a responsive football intelligence dashboard built with vanilla HTM
 - CSS3
 - Vanilla JavaScript
 - Node.js
-- football-data.org API
-- Nginx (optional for deployment)
+- football-data.org API v4
+- Nginx(optional for deployment)
+- Docker
+- Docker Compose
 
 No frontend framework is used.
-
 ## Project structure
 
 ```text
-MatchLens-project/
+MatchLensProject/
+├── docker/
+│   ├── lb.conf
+│   └── web.conf
 ├── site/
 │   ├── index.html
 │   ├── styles.css
 │   └── app.js
+├── tests/
 ├── api-server.js
+├── Dockerfile
+├── compose.yaml
 ├── package.json
+├── .dockerignore
 ├── .env.example
 ├── .gitignore
 └── README.md
-```
 
 ## How the application works
 
