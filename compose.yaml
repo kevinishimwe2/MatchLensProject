@@ -1,0 +1,64 @@
+services:
+  web01:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: matchlens-web01
+    hostname: web01
+    env_file:
+      - /etc/matchlens.env
+    restart: unless-stopped
+    networks:
+      - matchlens-network
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1/health').then(response => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  web02:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: matchlens-web02
+    hostname: web02
+    env_file:
+      - /etc/matchlens.env
+    restart: unless-stopped
+    networks:
+      - matchlens-network
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1/health').then(response => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  lb01:
+    image: nginx:1.27-alpine
+    container_name: matchlens-lb01
+    hostname: lb01
+    ports:
+      - "8081:80"
+    volumes:
+      - ./docker/lb.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      web01:
+        condition: service_healthy
+      web02:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - matchlens-network
+
+networks:
+  matchlens-network:
+    name: matchlens-network
+    driver: bridge

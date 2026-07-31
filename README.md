@@ -273,5 +273,5 @@ Confirm that every team in the `/api/football` response contains a `crest` URL, 
 
 Football data and club crests are provided by [football-data.org](https://www.football-data.org/).
 
-Demo video Link:
-Deployment Link:
+Demo Video Link:
+Website Link:
